@@ -21,7 +21,7 @@ pub enum TokenType {
     GT,
 
     EQ,
-    NOTEq,
+    NOT_EQ,
 
     // Delimiters
     COMMA,
@@ -46,6 +46,11 @@ fn keywords(literal: &str) -> Option<TokenType> {
     let keywords: HashMap<&str, TokenType> = HashMap::from([
         ("fn", TokenType::FUNCTION),
         ("let", TokenType::LET),
+        ("true", TokenType::TRUE),
+        ("false", TokenType::FALSE),
+        ("if", TokenType::IF),
+        ("else", TokenType::ELSE),
+        ("return", TokenType::RETURN),
     ]);
 
     keywords.get(literal).cloned()
