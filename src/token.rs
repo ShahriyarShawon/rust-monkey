@@ -1,7 +1,8 @@
-use std::collections::HashMap;
+use std::{collections::HashMap};
 
-#[derive(Debug, Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub enum TokenType {
+    #[default]
     ILLEGAL,
     EOF,
 
@@ -21,7 +22,7 @@ pub enum TokenType {
     GT,
 
     EQ,
-    NOT_EQ,
+    NotEq,
 
     // Delimiters
     COMMA,
@@ -64,7 +65,7 @@ pub fn lookup_ident(ident: String) -> TokenType {
     return tok
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Default)]
 pub struct Token {
     pub token_type: TokenType,
     pub literal: String,

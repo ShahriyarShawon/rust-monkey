@@ -66,7 +66,7 @@ impl Lexer {
                     self.read_char();
                     self.read_char();
                     return Token {
-                        token_type: TokenType::NOT_EQ,
+                        token_type: TokenType::NotEq,
                         literal: "!=".to_string()
                     }
                 } else {
@@ -173,11 +173,7 @@ mod tests {
     use crate::token::*;
 
     #[test]
-    fn TestNextToken() {
-        struct Test {
-            expectedType: TokenType,
-            expectedLiteral: String,
-        }
+    fn test_next_token() {
 
         let input = r#"let five = 5;
 let ten = 10;
@@ -269,7 +265,7 @@ if (5 < 10) {
             (TokenType::INT, "10".to_string()),
             (TokenType::SEMICOLON, ";".to_string()),
             (TokenType::INT, "10".to_string()),
-            (TokenType::NOT_EQ, "!=".to_string()),
+            (TokenType::NotEq, "!=".to_string()),
             (TokenType::INT, "9".to_string()),
             (TokenType::SEMICOLON, ";".to_string()),
             (TokenType::EOF, "".to_string()),
