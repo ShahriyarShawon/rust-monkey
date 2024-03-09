@@ -1,12 +1,12 @@
-mod lexer;
-mod token;
-mod repl;
 mod ast;
+mod lexer;
 mod parser;
+mod repl;
+mod token;
 
-use token::*;
 use repl::*;
+use token::*;
 
 fn main() {
-   StartRepl(); 
+    StartRepl();
 }

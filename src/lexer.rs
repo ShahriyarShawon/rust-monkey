@@ -5,7 +5,7 @@ pub struct Lexer {
     position: usize,
     read_position: usize,
     ch: char,
-    char_list: Vec<char>
+    char_list: Vec<char>,
 }
 
 impl Lexer {
@@ -15,7 +15,7 @@ impl Lexer {
             position: 0,
             read_position: 0,
             ch: '\0',
-            char_list: Vec::new()
+            char_list: Vec::new(),
         };
 
         l.read_char();
@@ -49,12 +49,12 @@ impl Lexer {
                     self.read_char();
                     return Token {
                         token_type: TokenType::EQ,
-                        literal: "==".to_string()
-                    }
+                        literal: "==".to_string(),
+                    };
                 } else {
                     self.new_token(TokenType::ASSIGN, self.ch)
                 }
-            },
+            }
             '>' => self.new_token(TokenType::GT, self.ch),
             '<' => self.new_token(TokenType::LT, self.ch),
             ',' => self.new_token(TokenType::COMMA, self.ch),
@@ -67,39 +67,38 @@ impl Lexer {
                     self.read_char();
                     return Token {
                         token_type: TokenType::NotEq,
-                        literal: "!=".to_string()
-                    }
+                        literal: "!=".to_string(),
+                    };
                 } else {
                     self.new_token(TokenType::BANG, self.ch)
                 }
-            },
+            }
             '{' => self.new_token(TokenType::LBRACE, self.ch),
             '}' => self.new_token(TokenType::RBRACE, self.ch),
-            '\0' => Token{ token_type: TokenType::EOF, literal: "".to_string()},
-
+            '\0' => Token {
+                token_type: TokenType::EOF,
+                literal: "".to_string(),
+            },
 
             _ => {
                 if self.ch.is_alphabetic() {
                     let literal = self.read_identifier();
                     return Token {
                         literal: literal.clone(),
-                        token_type: lookup_ident(literal)
-                    }
-                }
-                else if self.ch.is_digit(10) {
+                        token_type: lookup_ident(literal),
+                    };
+                } else if self.ch.is_digit(10) {
                     return Token {
                         token_type: TokenType::INT,
-                        literal: self.read_number()
-                    } 
-                }
-                else {
+                        literal: self.read_number(),
+                    };
+                } else {
                     return Token {
                         token_type: TokenType::EOF,
                         literal: self.ch.to_string(),
-                    }
+                    };
                 }
-
-            },
+            }
         };
         self.read_char();
         tok
@@ -114,15 +113,14 @@ impl Lexer {
             literal,
         }
     }
-    
+
     pub fn read_identifier(&mut self) -> String {
         let pos = self.position;
 
         loop {
             if self.ch.is_alphabetic() {
                 self.read_char()
-            }
-            else {
+            } else {
                 break;
             }
         }
@@ -131,7 +129,7 @@ impl Lexer {
 
     pub fn read_number(&mut self) -> String {
         let pos = self.position;
-        
+
         loop {
             if self.ch.is_digit(10) {
                 self.read_char();
@@ -157,12 +155,11 @@ impl Lexer {
         String::from_iter(self.char_list[start..end].iter())
     }
 
-
     pub fn peek_char(&mut self) -> char {
         if self.read_position >= self.input.len() {
-            return '\0'
+            return '\0';
         } else {
-            return self.char_list.get(self.read_position).unwrap().clone()
+            return self.char_list.get(self.read_position).unwrap().clone();
         }
     }
 }
@@ -174,7 +171,6 @@ mod tests {
 
     #[test]
     fn test_next_token() {
-
         let input = r#"let five = 5;
 let ten = 10;
 let add = fn(x, y) {

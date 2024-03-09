@@ -1,4 +1,4 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 #[derive(Debug, Eq, PartialEq, Clone, Default)]
 pub enum TokenType {
@@ -60,9 +60,9 @@ fn keywords(literal: &str) -> Option<TokenType> {
 pub fn lookup_ident(ident: String) -> TokenType {
     let tok = match keywords(ident.as_str()) {
         Some(tt) => tt.clone(),
-        None => TokenType::IDENT
+        None => TokenType::IDENT,
     };
-    return tok
+    return tok;
 }
 
 #[derive(Debug, Clone, Default)]

@@ -2,9 +2,7 @@ use std::io::{self, Write};
 
 use crate::{lexer::*, parser::*, TokenType};
 
-
 const PROMPT: &str = ">> ";
-
 
 pub fn StartRepl() {
     let mut buffer = String::new();
@@ -19,13 +17,14 @@ pub fn StartRepl() {
                 if s == 0 {
                     break;
                 }
-            },
-            Err(err) => {panic!("somethings gone wrong {:?}", err)}
+            }
+            Err(err) => {
+                panic!("somethings gone wrong {:?}", err)
+            }
         }
         buffer = buffer.trim().to_string();
         println!("{}", buffer);
-    
-        
+
         let mut lexer = Lexer::new(buffer.as_str());
         // loop {
         //     let tok = lexer.next_token();
@@ -39,7 +38,5 @@ pub fn StartRepl() {
         println!("created lexer");
         let mut parser = Parser::new(lexer);
         let p = parser.parse_program();
-
-
     }
 }
