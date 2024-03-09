@@ -109,7 +109,7 @@ impl Parser {
 
     pub fn parse_return_statement(&mut self) -> Option<Box<dyn Statement>> {
         // return <expression>;
-        let stmt = Box::new(ReturnStatement{
+        let stmt = Box::new(ReturnStatement {
             token: self.cur_token.clone(),
             ..Default::default()
         });
@@ -121,8 +121,7 @@ impl Parser {
         loop {
             if self.cur_token_is(TokenType::SEMICOLON) {
                 break;
-            }
-            else {
+            } else {
                 self.next_token();
             }
         }
@@ -243,9 +242,12 @@ return 993322;
         let program = p.parse_program();
         check_parser_errors(&p);
 
-        assert_eq!(program.statements.len(), 3,
-                "program statements does not contain 3 statements, got {}",
-                program.statements.len());
+        assert_eq!(
+            program.statements.len(),
+            3,
+            "program statements does not contain 3 statements, got {}",
+            program.statements.len()
+        );
 
         for stmt in program.statements {
             let returnstmt = match stmt.as_any().downcast_ref::<ReturnStatement>() {
@@ -256,7 +258,8 @@ return 993322;
                 }
             };
             if returnstmt.token_literal() != "return" {
-                assert!(false,
+                assert!(
+                    false,
                     "return statement literal not 'return', got {}",
                     returnstmt.token_literal()
                 );
