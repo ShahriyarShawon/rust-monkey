@@ -1,21 +1,75 @@
 use crate::token::*;
-use std::any::Any;
 
 pub trait Node {
     fn token_literal(&self) -> String;
     fn to_string(&self) -> String;
 }
 
-pub trait Statement: Node {
-    fn as_any(&self) -> &dyn Any;
+#[derive(Debug)]
+pub enum Statement {
+    LetStatement(LetStatement),
+    ReturnStatement(ReturnStatement),
 }
 
-pub trait Expression: Node {
-    fn expression_node(&self);
+impl Node for Statement {
+    fn token_literal(&self) -> String {
+        match self {
+            Statement::LetStatement(ls) => ls.token.literal.clone(),
+            Statement::ReturnStatement(rs) => rs.token.literal.clone(),
+        }
+    }
+
+    fn to_string(&self) -> String {
+        match self {
+            Statement::LetStatement(ls) => {
+                return format!(
+                    "{} {} = {};",
+                    ls.token_literal(),
+                    ls.name.to_string(),
+                    match &ls.value {
+                        Some(v) => v.to_string(),
+                        None => "".to_string(),
+                    }
+                )
+            }
+            Statement::ReturnStatement(rs) => {
+                return format!(
+                    "{} {};",
+                    rs.token_literal(),
+                    match &rs.return_value {
+                        Some(rv) => rv.to_string(),
+                        None => "".to_string(),
+                    }
+                )
+            }
+        }
+    }
 }
 
+#[derive(Debug)]
+pub enum Expression {
+    Identifier(Identifier),
+}
+
+impl Node for Expression {
+    fn token_literal(&self) -> String {
+        match self {
+            Expression::Identifier(id) => id.token.literal.clone(),
+            _ => panic!("token_literal"),
+        }
+    }
+
+    fn to_string(&self) -> String {
+        match self {
+            Expression::Identifier(id) => id.value.to_string(),
+            _ => panic!("to_string"),
+        }
+    }
+}
+
+#[derive(Debug)]
 pub struct Program {
-    pub statements: Vec<Box<dyn Statement>>,
+    pub statements: Vec<Statement>,
 }
 
 impl Node for Program {
@@ -40,17 +94,11 @@ impl Node for Program {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct LetStatement {
     pub token: Token,
     pub name: Identifier,
-    pub value: Option<Box<dyn Expression>>,
-}
-
-impl Statement for LetStatement {
-    fn as_any(&self) -> &dyn Any {
-        self
-    }
+    pub value: Option<Expression>,
 }
 
 impl Node for LetStatement {
@@ -71,7 +119,7 @@ impl Node for LetStatement {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct Identifier {
     pub token: Token,
     pub value: String,
@@ -85,17 +133,12 @@ impl Node for Identifier {
     fn to_string(&self) -> String {
         return self.value.to_string();
     }
-
 }
 
-impl Expression for Identifier {
-    fn expression_node(&self) {}
-}
-
-#[derive(Default)]
+#[derive(Default, Debug)]
 pub struct ReturnStatement {
     pub token: Token,
-    pub return_value: Option<Box<dyn Expression>>,
+    pub return_value: Option<Box<Expression>>,
 }
 
 impl Node for ReturnStatement {
@@ -106,24 +149,15 @@ impl Node for ReturnStatement {
     fn to_string(&self) -> String {
         let return_value = match &self.return_value {
             Some(rv) => rv.to_string(),
-            None => "".to_string()
+            None => "".to_string(),
         };
-        return format!("{} {};", 
-                       self.token_literal(), 
-                       return_value
-                       );
-    }
-}
-
-impl Statement for ReturnStatement {
-    fn as_any(&self) -> &dyn Any {
-        self
+        return format!("{} {};", self.token_literal(), return_value);
     }
 }
 
 struct ExpressionStatement {
     token: Token,
-    expression: Option<Box<dyn Expression>>,
+    expression: Option<Expression>,
 }
 
 impl Node for ExpressionStatement {
@@ -134,14 +168,8 @@ impl Node for ExpressionStatement {
     fn to_string(&self) -> String {
         match &self.expression {
             Some(e) => e.to_string(),
-            None => "".to_string()
+            None => "".to_string(),
         }
-    }
-}
-
-impl Statement for ExpressionStatement {
-    fn as_any(&self) -> &dyn Any {
-        self
     }
 }
 
@@ -149,26 +177,38 @@ impl Statement for ExpressionStatement {
 mod tests {
     use crate::{ast::Node, Token};
 
-    use super::{Identifier, LetStatement, Program, TokenType};
+    use super::{Expression, Identifier, LetStatement, Program, Statement, TokenType};
 
     #[test]
     fn test_string() {
-        let program = Program{
-            statements: vec![
-                Box::new(LetStatement{
-                    token: Token{token_type: TokenType::LET, literal: "let".to_string()},
-                    name: Identifier{
-                        token: Token{token_type: TokenType::IDENT, literal: "myVar".to_string()},
-                        value: "myVar".to_string()
-                    },
-                    value: Some(Box::new(Identifier {
-                        token: Token {token_type: TokenType::IDENT, literal: "anotherVar".to_string()},
-                        value: "anotherVar".to_string()
-                    })),
+        let program = Program {
+            statements: vec![Statement::LetStatement(LetStatement {
+                token: Token {
+                    token_type: TokenType::LET,
+                    literal: "let".to_string(),
                 },
-            )]
+                name: Identifier {
+                    token: Token {
+                        token_type: TokenType::IDENT,
+                        literal: "myVar".to_string(),
+                    },
+                    value: "myVar".to_string(),
+                },
+                value: Some(Expression::Identifier(Identifier {
+                    token: Token {
+                        token_type: TokenType::IDENT,
+                        literal: "anotherVar".to_string(),
+                    },
+                    value: "anotherVar".to_string(),
+                })),
+            })],
         };
 
-        assert_eq!(program.to_string(), "let myVar = anotherVar;".to_string(), "unexpected, got {}", program.to_string());
+        assert_eq!(
+            program.to_string(),
+            "let myVar = anotherVar;".to_string(),
+            "unexpected, got {}",
+            program.to_string()
+        );
     }
 }

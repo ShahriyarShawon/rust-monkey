@@ -38,5 +38,6 @@ pub fn StartRepl() {
         println!("created lexer");
         let mut parser = Parser::new(lexer);
         let p = parser.parse_program();
+        dbg!(p);
     }
 }

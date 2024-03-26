@@ -66,7 +66,7 @@ impl Parser {
         program
     }
 
-    pub fn parse_statement(&mut self) -> Option<Box<dyn Statement>> {
+    pub fn parse_statement(&mut self) -> Option<Statement> {
         match self.cur_token.token_type {
             TokenType::LET => self.parse_let_statement(),
             TokenType::RETURN => self.parse_return_statement(),
@@ -74,13 +74,13 @@ impl Parser {
         }
     }
 
-    pub fn parse_let_statement(&mut self) -> Option<Box<dyn Statement>> {
+    pub fn parse_let_statement(&mut self) -> Option<Statement> {
         // let <identifier> = <expression>;
-        let mut stmt = Box::new(LetStatement {
+        let mut stmt = LetStatement {
             token: self.cur_token.clone(),
             value: None,
             ..Default::default()
-        });
+        };
 
         if !self.expect_peek(TokenType::IDENT) {
             return None;
@@ -104,15 +104,15 @@ impl Parser {
             }
         }
 
-        Some(stmt)
+        Some(Statement::LetStatement(stmt))
     }
 
-    pub fn parse_return_statement(&mut self) -> Option<Box<dyn Statement>> {
+    pub fn parse_return_statement(&mut self) -> Option<Statement> {
         // return <expression>;
-        let stmt = Box::new(ReturnStatement {
+        let stmt = ReturnStatement {
             token: self.cur_token.clone(),
             ..Default::default()
-        });
+        };
 
         self.next_token();
 
@@ -126,7 +126,7 @@ impl Parser {
             }
         }
 
-        Some(stmt)
+        Some(Statement::ReturnStatement(stmt))
     }
     fn expect_peek(&mut self, token_type: TokenType) -> bool {
         if self.peek_token_is(&token_type) {
@@ -195,37 +195,26 @@ let foo = 838383;
         }
     }
 
-    fn test_let_statement(stmt: &Box<dyn Statement>, name: &str) -> bool {
+    fn test_let_statement(stmt: &Statement, name: &str) -> bool {
         if stmt.token_literal() == "let" {
             println!("TokenLiteral not 'let', got {}", stmt.token_literal());
             return false;
         }
 
-        let letstmt = match stmt.as_any().downcast_ref::<LetStatement>() {
-            Some(statement) => statement,
-            None => {
-                print!("statement is not let statement");
+        if let Statement::LetStatement(ls) = stmt {
+            if ls.name.value != name {
+                println!("LetStatement.Name.Value not {}, got {}", name, ls.name.value);
                 return false;
             }
-        };
-
-        if letstmt.name.value != name {
-            println!(
-                "let statement value not {}, instead got {}",
-                name, letstmt.name.value
-            );
+            if ls.name.token_literal() != name {
+                println!("LetStatement.Name.TokenLiteral not {} got {}", name, ls.name.token_literal());
+                return false;
+            }
+            return true;
+        } else {
+            println!("statement is not LetStatement");
             return false;
         }
-
-        if letstmt.name.token_literal() != name {
-            println!(
-                "letstatement token literal not {}, instead got {}",
-                name,
-                letstmt.name.token_literal()
-            );
-            return false;
-        }
-        true
     }
 
     #[test]
@@ -250,9 +239,9 @@ return 993322;
         );
 
         for stmt in program.statements {
-            let returnstmt = match stmt.as_any().downcast_ref::<ReturnStatement>() {
-                Some(statement) => statement,
-                None => {
+            let returnstmt = match stmt {
+                Statement::ReturnStatement(rs) => rs,
+                _ => {
                     assert!(false, "statement is not a return statement");
                     continue;
                 }
