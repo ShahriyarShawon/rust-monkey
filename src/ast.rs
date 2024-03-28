@@ -5,10 +5,11 @@ pub trait Node {
     fn to_string(&self) -> String;
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Statement {
     LetStatement(LetStatement),
     ReturnStatement(ReturnStatement),
+    ExpressionStatement(ExpressionStatement),
 }
 
 impl Node for Statement {
@@ -16,6 +17,7 @@ impl Node for Statement {
         match self {
             Statement::LetStatement(ls) => ls.token.literal.clone(),
             Statement::ReturnStatement(rs) => rs.token.literal.clone(),
+            Statement::ExpressionStatement(es) => es.token.literal.clone(),
         }
     }
 
@@ -42,11 +44,17 @@ impl Node for Statement {
                     }
                 )
             }
+            Statement::ExpressionStatement(es) => {
+                if es.expression.is_some() {
+                    return es.expression.as_ref().unwrap().to_string();
+                }
+                return "".to_string();
+            }
         }
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum Expression {
     Identifier(Identifier),
 }
@@ -55,14 +63,14 @@ impl Node for Expression {
     fn token_literal(&self) -> String {
         match self {
             Expression::Identifier(id) => id.token.literal.clone(),
-            _ => panic!("token_literal"),
+            //_ => panic!("token_literal"),
         }
     }
 
     fn to_string(&self) -> String {
         match self {
             Expression::Identifier(id) => id.value.to_string(),
-            _ => panic!("to_string"),
+            //_ => panic!("to_string"),
         }
     }
 }
@@ -94,7 +102,7 @@ impl Node for Program {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct LetStatement {
     pub token: Token,
     pub name: Identifier,
@@ -119,7 +127,7 @@ impl Node for LetStatement {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct Identifier {
     pub token: Token,
     pub value: String,
@@ -135,7 +143,7 @@ impl Node for Identifier {
     }
 }
 
-#[derive(Default, Debug)]
+#[derive(Default, Debug, Clone)]
 pub struct ReturnStatement {
     pub token: Token,
     pub return_value: Option<Box<Expression>>,
@@ -155,9 +163,10 @@ impl Node for ReturnStatement {
     }
 }
 
-struct ExpressionStatement {
-    token: Token,
-    expression: Option<Expression>,
+#[derive(Debug, Default, Clone)]
+pub struct ExpressionStatement {
+    pub token: Token,
+    pub expression: Option<Expression>,
 }
 
 impl Node for ExpressionStatement {
@@ -175,7 +184,7 @@ impl Node for ExpressionStatement {
 
 #[cfg(test)]
 mod tests {
-    use crate::{ast::Node, Token};
+    use crate::{ast::Node, token::Token};
 
     use super::{Expression, Identifier, LetStatement, Program, Statement, TokenType};
 

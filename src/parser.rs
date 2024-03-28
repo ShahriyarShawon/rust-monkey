@@ -2,6 +2,17 @@ use crate::ast::*;
 use crate::lexer::*;
 use crate::token::*;
 
+#[allow(dead_code)]
+pub enum Precedence {
+    LOWEST,
+    EQUALS,
+    LESSGREATER,
+    SUM,
+    PRODUCT,
+    PREFIX,
+    CALL,
+}
+
 pub struct Parser {
     l: Lexer,
     cur_token: Token,
@@ -29,6 +40,7 @@ impl Parser {
         p
     }
 
+    #[allow(dead_code)]
     pub fn errors(&self) -> Vec<String> {
         self.errors.clone()
     }
@@ -70,7 +82,7 @@ impl Parser {
         match self.cur_token.token_type {
             TokenType::LET => self.parse_let_statement(),
             TokenType::RETURN => self.parse_return_statement(),
-            _ => None,
+            _ => self.parse_expression_statement(),
         }
     }
 
@@ -128,6 +140,34 @@ impl Parser {
 
         Some(Statement::ReturnStatement(stmt))
     }
+
+    pub fn parse_expression_statement(&mut self) -> Option<Statement> {
+        dbg!("parse_expression_statement");
+        let stmt = Statement::ExpressionStatement(ExpressionStatement {
+            token: self.cur_token.clone(),
+            ..Default::default()
+        });
+
+        if let Statement::ExpressionStatement(mut es) = stmt.clone() {
+            es.expression = self.parse_expression(Precedence::LOWEST);
+
+            if self.peek_token_is(&TokenType::SEMICOLON) {
+                self.next_token();
+            }
+
+            return Some(Statement::ExpressionStatement(es));
+        }
+        None
+    }
+
+    pub fn parse_expression(&mut self, _precedence: Precedence) -> Option<Expression> {
+        dbg!("parse_expression");
+        let exp = self.prefix_parse_fn(&self.cur_token.token_type);
+        dbg!(&exp);
+
+        exp
+    }
+
     fn expect_peek(&mut self, token_type: TokenType) -> bool {
         if self.peek_token_is(&token_type) {
             self.next_token();
@@ -145,12 +185,34 @@ impl Parser {
     fn peek_token_is(&self, token_type: &TokenType) -> bool {
         self.peek_token.token_type == *token_type
     }
+
+    fn prefix_parse_fn(&self, token_type: &TokenType) -> Option<Expression> {
+        dbg!("prefix_parse_fn");
+        match token_type {
+            TokenType::IDENT => Some(self.parse_identifier()),
+            _ => None,
+        }
+    }
+
+    #[allow(dead_code)]
+    fn infix_parse_fn(&self, _token_type: TokenType) {}
+
+    fn parse_identifier(&self) -> Expression {
+        dbg!("parse_identifier");
+        return Expression::Identifier(Identifier {
+            token: self.cur_token.clone(),
+            value: self.cur_token.literal.clone(),
+        });
+    }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{LetStatement, Lexer, Node, Parser, ReturnStatement, Statement};
-    use crate::lexer;
+    use super::{Lexer, Node, Parser,Statement};
+    use crate::{
+        ast::Expression,
+        lexer,
+    };
 
     fn check_parser_errors(p: &Parser) {
         let error_count = p.errors.len();
@@ -203,11 +265,18 @@ let foo = 838383;
 
         if let Statement::LetStatement(ls) = stmt {
             if ls.name.value != name {
-                println!("LetStatement.Name.Value not {}, got {}", name, ls.name.value);
+                println!(
+                    "LetStatement.Name.Value not {}, got {}",
+                    name, ls.name.value
+                );
                 return false;
             }
             if ls.name.token_literal() != name {
-                println!("LetStatement.Name.TokenLiteral not {} got {}", name, ls.name.token_literal());
+                println!(
+                    "LetStatement.Name.TokenLiteral not {} got {}",
+                    name,
+                    ls.name.token_literal()
+                );
                 return false;
             }
             return true;
@@ -254,6 +323,46 @@ return 993322;
                 );
                 continue;
             }
+        }
+    }
+
+    #[test]
+    fn test_identifier_expression() {
+        let input = "foobar;";
+        let l = Lexer::new(input);
+        let mut p = Parser::new(l);
+        let program = p.parse_program();
+        check_parser_errors(&p);
+
+        assert_eq!(
+            1,
+            program.statements.len(),
+            "Program has not enough statements, got {}",
+            program.statements.len()
+        );
+
+
+        if let Statement::ExpressionStatement(mut es) = program.statements.get(0).unwrap().clone() {
+            dbg!(&es);
+            #[allow(irrefutable_let_patterns)]
+            if let Expression::Identifier(id) = es.expression.as_mut().unwrap() {
+                assert_eq!(
+                    &id.value, "foobar",
+                    "ident value not {}, got {}",
+                    "foobar", &id.value
+                );
+                assert_eq!(
+                    &id.token_literal(),
+                    "foobar",
+                    "ident token literal not {}, got {}",
+                    "foobar",
+                    &id.token_literal()
+                );
+            } else {
+                assert!(false, "exp not Identifier");
+            }
+        } else {
+            assert!(false, "program statements [0] is not ExpressionStatement");
         }
     }
 }

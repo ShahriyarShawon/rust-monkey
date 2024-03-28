@@ -5,8 +5,8 @@ mod repl;
 mod token;
 
 use repl::*;
-use token::*;
+//use token::*;
 
 fn main() {
-    StartRepl();
+    start_repl();
 }

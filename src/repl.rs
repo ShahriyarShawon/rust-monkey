@@ -1,15 +1,15 @@
 use std::io::{self, Write};
 
-use crate::{lexer::*, parser::*, TokenType};
+use crate::{lexer::*, parser::*};
 
 const PROMPT: &str = ">> ";
 
-pub fn StartRepl() {
+pub fn start_repl() {
     let mut buffer = String::new();
 
     loop {
-        io::stdout().write_all(PROMPT.as_bytes());
-        io::stdout().flush();
+        let _ = io::stdout().write_all(PROMPT.as_bytes());
+        let _ = io::stdout().flush();
         buffer.clear();
 
         match io::stdin().read_line(&mut buffer) {
@@ -25,7 +25,7 @@ pub fn StartRepl() {
         buffer = buffer.trim().to_string();
         println!("{}", buffer);
 
-        let mut lexer = Lexer::new(buffer.as_str());
+        let lexer = Lexer::new(buffer.as_str());
         // loop {
         //     let tok = lexer.next_token();
         //     if tok.token_type != TokenType::EOF {
